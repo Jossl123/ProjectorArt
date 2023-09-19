@@ -6,44 +6,20 @@ import cv2
 # settings
 res = width, height = 800, 450 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
 
-class Video:
-    def __init__(self, file):
-        self.video = cv2.VideoCapture(file)
-        self.restart = True
-        self.file = file
-        self.position = np.array([0,0])
-        self.success = False
-        self.video_image = None
-    
-    def get_image(self):
-        self.position[0]+=1
-        self.success, self.video_image = self.video.read()
-        if self.success:
-            return pygame.image.frombuffer(
-                self.video_image.tobytes(), self.video_image.shape[1::-1], "BGR")
-        else:
-            self.restart_video()
-            return pygame.image.frombuffer(
-                self.video_image.tobytes(), self.video_image.shape[1::-1], "BGR")
-
-    def restart_video(self):
-        self.video = cv2.VideoCapture(self.file)
-        self.success, self.video_image = self.video.read()
-
-    def get_fps(self):
-        return self.video.get(cv2.CAP_PROP_FPS)
-
 @ti.data_oriented
 class Drawing:
     def __init__(self, app):
         self.app = app
         self.screen_array = np.full((width, height, 3), [0, 0, 0], dtype=np.uint32)
-        # taichi architecture : ti.cpu, ti.cuda, ti.opengl, ti.vulkan, ti.metal
         ti.init(arch=ti.cpu)
         self.screen_field = ti.Vector.field(3, ti.uint32, (width, height))
-        self.video = Video("./videos/the_rock_meme.mp4")
         self.app_speed = 1 / 4000
         self.prev_time = pygame.time.get_ticks()
+
+
+        self.shapes = []
+        self.shoosing_shape = False
+        self.creating_shape = None
 
     def delta_time(self):
         time_now = pygame.time.get_ticks() - self.prev_time
@@ -65,17 +41,45 @@ class Drawing:
         if pressed_key[pygame.K_w]:pass
         if pressed_key[pygame.K_s]:pass
 
+    def click(self, mouse_pos):
+        # if not self.shoosing_shape:
+        #     self.shoosing_shape = True
+        #     self.shoosing_shape = False
+        #     self.creating_shape = pygame.Rect(mouse_pos[0],mouse_pos[1],0,0)
+        if self.creating_shape is not None:
+            self.shapes.append(mouse_poses_to_rect(self.creating_shape, mouse_pos))
+            self.creating_shape = None
+        else:
+            self.creating_shape = mouse_pos
+
     def update(self):
         self.render()
         self.screen_array = self.screen_field.to_numpy()
 
     def draw(self):
         pygame.surfarray.blit_array(self.app.screen, self.screen_array)
-        self.app.screen.blit(self.video.get_image(), self.video.position)
-
+        for shape in self.shapes:
+            pygame.draw.rect(self.app.screen, (0,0,200), shape)
+        if self.shoosing_shape:
+            pass
+        if self.creating_shape:
+            pygame.draw.rect(self.app.screen, (0,200,0), mouse_poses_to_rect(self.creating_shape, pygame.mouse.get_pos()))
     def run(self):
         self.update()
         self.draw()
+
+def mouse_poses_to_rect(mouse_pos1, mouse_pos2):
+    x=mouse_pos1[0]
+    y=mouse_pos1[1]
+    w=mouse_pos2[0] - x 
+    h=mouse_pos2[1] - y
+    if w < 0:
+        w *= -1
+        x -= w
+    if h < 0:
+        h *= -1
+        y -= h
+    return pygame.Rect(x, y, w, h)
 
 class App:
     def __init__(self):
@@ -85,13 +89,15 @@ class App:
 
     def run(self):
         while True:
-            #clock.tick(video.get(cv2.CAP_PROP_FPS))
             self.screen.fill('black')
             self.drawing.run()
             pygame.display.flip()
-
-            [exit() for i in pygame.event.get() if i.type == pygame.QUIT]
-            self.clock.tick(self.drawing.video.get_fps())
+            
+            for i in pygame.event.get():
+                if i.type == pygame.QUIT:exit()
+                elif i.type == pygame.MOUSEBUTTONUP:
+                    self.drawing.click(pygame.mouse.get_pos())
+            self.clock.tick()
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.2f}')
 
 if __name__ == '__main__':
