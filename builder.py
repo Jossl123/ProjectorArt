@@ -1,10 +1,14 @@
 import pygame
 import numpy as np
 import taichi as ti
-import cv2
-
+from enum import Enum
 # settings
 res = width, height = 800, 450 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
+
+class Action(Enum):
+    NOTHING = 0
+    CREATING_SHAPE = 1
+    MOVING_SHAPE = 2
 
 @ti.data_oriented
 class Drawing:
@@ -16,10 +20,9 @@ class Drawing:
         self.app_speed = 1 / 4000
         self.prev_time = pygame.time.get_ticks()
 
-
         self.shapes = []
-        self.shoosing_shape = False
-        self.creating_shape = None
+        self.action = Action.NOTHING
+        self.action_param = None
 
     def delta_time(self):
         time_now = pygame.time.get_ticks() - self.prev_time
@@ -42,28 +45,44 @@ class Drawing:
         if pressed_key[pygame.K_s]:pass
 
     def click(self, mouse_pos):
-        # if not self.shoosing_shape:
-        #     self.shoosing_shape = True
-        #     self.shoosing_shape = False
-        #     self.creating_shape = pygame.Rect(mouse_pos[0],mouse_pos[1],0,0)
-        if self.creating_shape is not None:
-            self.shapes.append(mouse_poses_to_rect(self.creating_shape, mouse_pos))
-            self.creating_shape = None
-        else:
-            self.creating_shape = mouse_pos
+        print(self.action)
+        match self.action:
+            case Action.NOTHING:
+                for index, shape in enumerate(self.shapes):
+                    if shape.collidepoint(mouse_pos):
+                        self.action = Action.MOVING_SHAPE
+                        self.action_param = {"index":index,"start_pos": mouse_pos}
+                        continue
+                if self.action == Action.NOTHING:
+                    self.action = Action.CREATING_SHAPE
+                    self.action_param = mouse_pos
+            case Action.CREATING_SHAPE:
+                self.shapes.append(mouse_poses_to_rect(self.action_param, mouse_pos))
+                self.action = Action.NOTHING
+                self.action_param = None
+            case Action.MOVING_SHAPE:
+                self.action = Action.NOTHING
+                self.action_param = None
 
     def update(self):
         self.render()
         self.screen_array = self.screen_field.to_numpy()
+        match self.action:
+            case Action.MOVING_SHAPE:
+                mouse_pos = pygame.mouse.get_pos()
+                self.shapes[self.action_param["index"]].x -= self.action_param["start_pos"][0] - mouse_pos[0]
+                self.shapes[self.action_param["index"]].y -= self.action_param["start_pos"][1] - mouse_pos[1]
+                self.action_param["start_pos"] = mouse_pos
 
     def draw(self):
         pygame.surfarray.blit_array(self.app.screen, self.screen_array)
         for shape in self.shapes:
             pygame.draw.rect(self.app.screen, (0,0,200), shape)
-        if self.shoosing_shape:
-            pass
-        if self.creating_shape:
-            pygame.draw.rect(self.app.screen, (0,200,0), mouse_poses_to_rect(self.creating_shape, pygame.mouse.get_pos()))
+        match self.action:
+            case Action.CREATING_SHAPE:
+                pygame.draw.rect(self.app.screen, (0,200,0), mouse_poses_to_rect(self.action_param, pygame.mouse.get_pos()))
+            case Action.MOVING_SHAPE:
+                pygame.draw.rect(self.app.screen, (0,200,0), self.shapes[self.action_param["index"]])
     def run(self):
         self.update()
         self.draw()
