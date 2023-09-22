@@ -45,7 +45,6 @@ class Drawing:
         if pressed_key[pygame.K_s]:pass
 
     def click(self, mouse_pos):
-        print(self.action)
         match self.action:
             case Action.NOTHING:
                 for index, shape in enumerate(self.shapes):
@@ -105,20 +104,21 @@ class App:
         self.screen = pygame.display.set_mode(res, pygame.SCALED)
         self.clock = pygame.time.Clock()
         self.drawing = Drawing(self)
+        self.running = True
 
     def run(self):
-        while True:
+        while self.running:
             self.screen.fill('black')
             self.drawing.run()
             pygame.display.flip()
             
             for i in pygame.event.get():
-                if i.type == pygame.QUIT:exit()
+                if i.type == pygame.QUIT:self.running = False
                 elif i.type == pygame.MOUSEBUTTONUP:
                     self.drawing.click(pygame.mouse.get_pos())
             self.clock.tick()
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.2f}')
-
+        print(self.drawing.shapes)
 if __name__ == '__main__':
     app = App()
     app.run()
