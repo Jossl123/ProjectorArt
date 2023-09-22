@@ -2,13 +2,15 @@ import pygame
 import numpy as np
 import taichi as ti
 from enum import Enum
+from shapes import Rect
 # settings
-res = width, height = 800, 450 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
+res = width, height = 1920, 1080 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
 
 class Action(Enum):
     NOTHING = 0
     CREATING_SHAPE = 1
     MOVING_SHAPE = 2
+    CHOOSING_SHAPE = 3
 
 @ti.data_oriented
 class Drawing:
@@ -35,16 +37,17 @@ class Drawing:
             col = (x+y)%255
             self.screen_field[x, y] = [col, col, col]
 
-    def control(self):
-        pressed_key = pygame.key.get_pressed()
-        dt = self.delta_time()
-        # movement
-        if pressed_key[pygame.K_a]:pass
-        if pressed_key[pygame.K_d]:pass
-        if pressed_key[pygame.K_w]:pass
-        if pressed_key[pygame.K_s]:pass
+    # def control(self):
+    #     pressed_key = pygame.key.get_pressed()
+    #     dt = self.delta_time()
+    #     # movement
+    #     if pressed_key[pygame.K_a]:pass
+    #     if pressed_key[pygame.K_d]:pass
+    #     if pressed_key[pygame.K_w]:pass
+    #     if pressed_key[pygame.K_s]:pass
 
     def click(self, mouse_pos):
+        mouse_pos = np.array(mouse_pos)
         match self.action:
             case Action.NOTHING:
                 for index, shape in enumerate(self.shapes):
@@ -53,7 +56,7 @@ class Drawing:
                         self.action_param = {"index":index,"start_pos": mouse_pos}
                         continue
                 if self.action == Action.NOTHING:
-                    self.action = Action.CREATING_SHAPE
+                    self.action = Action.CHOOSING_SHAPE
                     self.action_param = mouse_pos
             case Action.CREATING_SHAPE:
                 self.shapes.append(mouse_poses_to_rect(self.action_param, mouse_pos))
@@ -62,10 +65,16 @@ class Drawing:
             case Action.MOVING_SHAPE:
                 self.action = Action.NOTHING
                 self.action_param = None
+            case Action.CHOOSING_SHAPE:
+                if np.linalg.norm(mouse_pos - self.action_param) <= 40:
+                    self.action = Action.CREATING_SHAPE
+                else:
+                    self.action = Action.NOTHING
+                    self.action_param = None
 
     def update(self):
-        self.render()
-        self.screen_array = self.screen_field.to_numpy()
+        #self.render()
+        #self.screen_array = self.screen_field.to_numpy()
         match self.action:
             case Action.MOVING_SHAPE:
                 mouse_pos = pygame.mouse.get_pos()
@@ -74,14 +83,18 @@ class Drawing:
                 self.action_param["start_pos"] = mouse_pos
 
     def draw(self):
-        pygame.surfarray.blit_array(self.app.screen, self.screen_array)
+        #pygame.surfarray.blit_array(self.app.screen, self.screen_array)
         for shape in self.shapes:
             pygame.draw.rect(self.app.screen, (0,0,200), shape)
         match self.action:
             case Action.CREATING_SHAPE:
-                pygame.draw.rect(self.app.screen, (0,200,0), mouse_poses_to_rect(self.action_param, pygame.mouse.get_pos()))
+                r = mouse_poses_to_rect(self.action_param, pygame.mouse.get_pos())
+                pygame.draw.rect(self.app.screen, (0,200,0), r)
+                pygame.draw.rect(self.app.screen, (0,100,0), pygame.Rect(r.left+2, r.top+2, r.width -4, r.height - 4))
             case Action.MOVING_SHAPE:
                 pygame.draw.rect(self.app.screen, (0,200,0), self.shapes[self.action_param["index"]])
+            case Action.CHOOSING_SHAPE:
+                pygame.draw.circle(self.app.screen, (100,100,100), self.action_param, 40)
     def run(self):
         self.update()
         self.draw()

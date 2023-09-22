@@ -4,7 +4,7 @@ import taichi as ti
 import cv2
 
 # settings
-res = width, height = 800, 450 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
+res = width, height = 1920, 1080 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
 
 class Video:
     def __init__(self, file):
@@ -66,11 +66,12 @@ class Drawing:
         if pressed_key[pygame.K_s]:pass
 
     def update(self):
-        self.render()
-        self.screen_array = self.screen_field.to_numpy()
+        #self.render()
+        #self.screen_array = self.screen_field.to_numpy()
+        pass
 
     def draw(self):
-        pygame.surfarray.blit_array(self.app.screen, self.screen_array)
+        #pygame.surfarray.blit_array(self.app.screen, self.screen_array)
         self.app.screen.blit(self.video.get_image(), self.video.position)
 
     def run(self):
