@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 import taichi as ti
 from enum import Enum
-from shapes import Rect
+from shapes import Rect, Circle
 # settings
 res = width, height = 1920, 1080 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
 
@@ -51,23 +51,29 @@ class Drawing:
         match self.action:
             case Action.NOTHING:
                 for index, shape in enumerate(self.shapes):
-                    if shape.collidepoint(mouse_pos):
+                    if shape.point_inside(mouse_pos):
                         self.action = Action.MOVING_SHAPE
                         self.action_param = {"index":index,"start_pos": mouse_pos}
                         continue
                 if self.action == Action.NOTHING:
                     self.action = Action.CHOOSING_SHAPE
-                    self.action_param = mouse_pos
+                    self.action_param = {"mouse_pos": mouse_pos}
             case Action.CREATING_SHAPE:
-                self.shapes.append(mouse_poses_to_rect(self.action_param, mouse_pos))
+                self.shapes.append(self.action_param["shape"].modify(mouse_pos))
                 self.action = Action.NOTHING
                 self.action_param = None
             case Action.MOVING_SHAPE:
                 self.action = Action.NOTHING
                 self.action_param = None
             case Action.CHOOSING_SHAPE:
-                if np.linalg.norm(mouse_pos - self.action_param) <= 40:
+                dir = mouse_pos - self.action_param["mouse_pos"]
+                mp = self.action_param["mouse_pos"]
+                if np.linalg.norm(dir) <= 40:
+                    shape = None
+                    if dir[0]<0:shape=Rect(mp[0], mp[1], mp[0] + dir[0], mp[1] + dir[1])
+                    else : shape = Circle(mp[0], mp[1], np.linalg.norm(dir))
                     self.action = Action.CREATING_SHAPE
+                    self.action_param = {"mouse_pos": mp, "shape": shape}
                 else:
                     self.action = Action.NOTHING
                     self.action_param = None
@@ -78,23 +84,25 @@ class Drawing:
         match self.action:
             case Action.MOVING_SHAPE:
                 mouse_pos = pygame.mouse.get_pos()
-                self.shapes[self.action_param["index"]].x -= self.action_param["start_pos"][0] - mouse_pos[0]
-                self.shapes[self.action_param["index"]].y -= self.action_param["start_pos"][1] - mouse_pos[1]
+                mouse_pos = np.array(mouse_pos)
+                self.shapes[self.action_param["index"]].move(self.action_param["start_pos"]-mouse_pos)
                 self.action_param["start_pos"] = mouse_pos
 
     def draw(self):
         #pygame.surfarray.blit_array(self.app.screen, self.screen_array)
         for shape in self.shapes:
-            pygame.draw.rect(self.app.screen, (0,0,200), shape)
+            shape.draw(self.app.screen)
+            #pygame.draw.rect(self.app.screen, (0,0,200), shape)
         match self.action:
             case Action.CREATING_SHAPE:
-                r = mouse_poses_to_rect(self.action_param, pygame.mouse.get_pos())
-                pygame.draw.rect(self.app.screen, (0,200,0), r)
-                pygame.draw.rect(self.app.screen, (0,100,0), pygame.Rect(r.left+2, r.top+2, r.width -4, r.height - 4))
+                r = self.action_param["shape"].modify(pygame.mouse.get_pos())
+                r.draw(self.app.screen)
+                #pygame.draw.rect(self.app.screen, (0,200,0), r)
+                #pygame.draw.rect(self.app.screen, (0,100,0), pygame.Rect(r.left+2, r.top+2, r.width -4, r.height - 4))
             case Action.MOVING_SHAPE:
-                pygame.draw.rect(self.app.screen, (0,200,0), self.shapes[self.action_param["index"]])
+                self.shapes[self.action_param["index"]].draw(self.app.screen)
             case Action.CHOOSING_SHAPE:
-                pygame.draw.circle(self.app.screen, (100,100,100), self.action_param, 40)
+                pygame.draw.circle(self.app.screen, (100,100,100), self.action_param["mouse_pos"], 40)
     def run(self):
         self.update()
         self.draw()
