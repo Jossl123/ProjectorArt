@@ -5,7 +5,9 @@ class Shape:
     def draw(self, screen):pass
     def modify(self, mouse_pos):pass
     def point_inside(self, p):pass
-
+    def move(self, p):pass
+    def __str__(self):
+        return "<shape()>"
 class Rect(Shape, pygame.Rect):
     def __init__(self, x, y, w, h):
         Shape.__init__(self)
@@ -63,3 +65,5 @@ class Circle(Shape):
         return np.linalg.norm(p - self.center) <= self.radius
     def move(self, p):
         self.center = self.center - p
+    def __str__(self):
+        return "<circle("+str(self.center[0])+","+str(self.center[1])+","+str(self.radius)+")>"

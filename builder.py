@@ -139,7 +139,9 @@ class App:
                     self.drawing.click(pygame.mouse.get_pos())
             self.clock.tick()
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.2f}')
-        print(self.drawing.shapes)
+        for i in range(len(self.drawing.shapes)):
+            print(self.drawing.shapes[i])
+            
 if __name__ == '__main__':
     app = App()
     app.run()
