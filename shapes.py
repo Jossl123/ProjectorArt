@@ -1,7 +1,9 @@
 import numpy as np
 import pygame
+from audiovisual import Video
 class Shape:
-    def __init__(self):pass
+    def __init__(self):
+        self.file = None
     def draw(self, screen):pass
     def modify(self, mouse_pos):pass
     def point_inside(self, p):pass
@@ -11,18 +13,23 @@ class Shape:
 class Rect(Shape, pygame.Rect):
     def __init__(self, x, y, w, h):
         Shape.__init__(self)
+        self.file = Video("./videos/the_rock_meme.mp4")
         self.start_pos=np.array([x, y])
         pygame.Rect.__init__(self, x, y, w, h)
         self.color = np.array([0,200,0])
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self)
+        pygame.draw.rect(screen, self.color, self,2)
         t = 1
-        # s = pygame.Surface(self.size)  # the size of your rect
-        # s.set_alpha(128)                # alpha level
-        # s.fill( np.divide(self.color, 2))           # this fills the entire surface
-        # screen.blit(s, self.topleft)    # (0,0) are the top-left coordinates
-        pygame.draw.rect(screen, np.divide(self.color, 2), pygame.Rect(self.left+t, self.top+t, self.width-t*2, self.height - t*2))
+        s = pygame.Surface(self.size)  # the size of your rect
+        s.set_alpha(128)                # alpha level
+        s.fill( np.divide(self.color, 2))           # this fills the entire surface
+        screen.blit(s, self.topleft)    # (0,0) are the top-left coordinates
+        #pygame.draw.rect(screen, np.divide(self.color, 2), pygame.Rect(self.left+t, self.top+t, self.width-t*2, self.height - t*2))
         self.color = np.array([0,200,0])
+        if not self.file:
+            return
+        screen.blit(self.file.get_image(), self.topleft, pygame.Rect(0,0,self.width,self.height))
+        #screen.blit(self.file.get_image(), self.topleft)
     def modify(self, mouse_pos):
         x=self.start_pos[0]
         y=self.start_pos[1]

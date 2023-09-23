@@ -11,6 +11,7 @@ class Action(Enum):
     CREATING_SHAPE = 1
     MOVING_SHAPE = 2
     CHOOSING_SHAPE = 3
+    CHOOSING_FILE = 4
 
 @ti.data_oriented
 class Drawing:
@@ -45,7 +46,14 @@ class Drawing:
     #     if pressed_key[pygame.K_d]:pass
     #     if pressed_key[pygame.K_w]:pass
     #     if pressed_key[pygame.K_s]:pass
-
+    def right_click(self, mouse_pos):
+        mouse_pos = np.array(mouse_pos)
+        for index, shape in enumerate(self.shapes):
+            if shape.point_inside(mouse_pos):
+                self.action = Action.CHOOSING_FILE
+                self.action_param = {"index":index}
+                continue
+            
     def click(self, mouse_pos):
         mouse_pos = np.array(mouse_pos)
         match self.action:
@@ -136,7 +144,8 @@ class App:
             for i in pygame.event.get():
                 if i.type == pygame.QUIT:self.running = False
                 elif i.type == pygame.MOUSEBUTTONUP:
-                    self.drawing.click(pygame.mouse.get_pos())
+                    if i.button == 1:self.drawing.click(pygame.mouse.get_pos())
+                    elif i.button == 2:self.drawing.right_click(pygame.mouse.get_pos())
             self.clock.tick()
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.2f}')
         for i in range(len(self.drawing.shapes)):
