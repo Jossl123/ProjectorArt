@@ -11,8 +11,16 @@ class Rect(Shape, pygame.Rect):
         Shape.__init__(self)
         self.start_pos=np.array([x, y])
         pygame.Rect.__init__(self, x, y, w, h)
+        self.color = np.array([0,200,0])
     def draw(self, screen):
-        pygame.draw.rect(screen, (0,200,0), self)
+        pygame.draw.rect(screen, self.color, self)
+        t = 1
+        # s = pygame.Surface(self.size)  # the size of your rect
+        # s.set_alpha(128)                # alpha level
+        # s.fill( np.divide(self.color, 2))           # this fills the entire surface
+        # screen.blit(s, self.topleft)    # (0,0) are the top-left coordinates
+        pygame.draw.rect(screen, np.divide(self.color, 2), pygame.Rect(self.left+t, self.top+t, self.width-t*2, self.height - t*2))
+        self.color = np.array([0,200,0])
     def modify(self, mouse_pos):
         x=self.start_pos[0]
         y=self.start_pos[1]
@@ -28,6 +36,7 @@ class Rect(Shape, pygame.Rect):
         self.top = y
         self.width = w
         self.height = h
+        self.color = (0,100,0)
         return self
     def point_inside(self, p):
         return self.collidepoint(p)
@@ -40,9 +49,14 @@ class Circle(Shape):
         Shape.__init__(self)
         self.center = np.array((x, y))
         self.radius = r
+        self.color = np.array((200,0,0))
     def draw(self, screen):
-        pygame.draw.circle(screen, (100,0,0), self.center, self.radius)
+        pygame.draw.circle(screen, self.color, self.center, self.radius)
+        t = 1
+        pygame.draw.circle(screen, np.divide(self.color, 2), self.center, self.radius-t)
+        self.color = np.array((200,0,0))
     def modify(self, mouse_pos):
+        self.color = np.array((100,0,0))
         self.radius = np.linalg.norm(self.center - mouse_pos)
         return self
     def point_inside(self, p):
