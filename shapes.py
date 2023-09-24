@@ -52,6 +52,8 @@ class Rect(Shape, pygame.Rect):
     def move(self, p):
         self.x -= p[0]
         self.y -= p[1]
+    def __str__(self):
+        return "<rect("+str(self.x)+","+str(self.y)+","+str(self.width)+","+str(self.height)+")>"
 
 class Circle(Shape):
     def __init__(self, x, y, r=0):
