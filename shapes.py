@@ -13,7 +13,7 @@ class Shape:
 class Rect(Shape, pygame.Rect):
     def __init__(self, x, y, w, h):
         Shape.__init__(self)
-        self.file = Video("./videos/the_rock_meme.mp4")
+        self.file = Video("./videos/abstract_loop.mp4")
         self.start_pos=np.array([x, y])
         pygame.Rect.__init__(self, x, y, w, h)
         self.color = np.array([0,200,0])
@@ -28,7 +28,9 @@ class Rect(Shape, pygame.Rect):
         self.color = np.array([0,200,0])
         if not self.file:
             return
-        screen.blit(self.file.get_image(), self.topleft, pygame.Rect(0,0,self.width,self.height))
+        img = self.file.get_image()
+        img = pygame.transform.scale(img, self.size)
+        screen.blit(img, self.topleft, pygame.Rect(0,0,self.width,self.height))
         #screen.blit(self.file.get_image(), self.topleft)
     def modify(self, mouse_pos):
         x=self.start_pos[0]
