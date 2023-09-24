@@ -3,7 +3,8 @@ import numpy as np
 import taichi as ti
 from enum import Enum
 from shapes import Rect, Circle
-# settings
+from audiovisual import Video
+# settings;
 res = width, height = 1920, 1080 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
 
 class Action(Enum):
@@ -50,8 +51,13 @@ class Drawing:
         mouse_pos = np.array(mouse_pos)
         for index, shape in enumerate(self.shapes):
             if shape.point_inside(mouse_pos):
-                self.action = Action.CHOOSING_FILE
-                self.action_param = {"index":index}
+                #self.action = Action.CHOOSING_FILE
+                #self.action_param = {"index":index}
+                # file_selection = pygame.UIFileDialog(rect=Rect(0, 0, 300, 300), manager=manager, initial_file_path='C:\\')
+                # if event.ui_element == file_selection.ok_button:
+                #     file_path = file_selection.current_file_path
+                if not shape.file:shape.file = Video("./videos/abstract_loop.mp4")
+                else : shape.file = None
                 continue
             
     def click(self, mouse_pos):
@@ -145,8 +151,8 @@ class App:
                 if i.type == pygame.QUIT:self.running = False
                 elif i.type == pygame.MOUSEBUTTONUP:
                     if i.button == 1:self.drawing.click(pygame.mouse.get_pos())
-                    elif i.button == 2:self.drawing.right_click(pygame.mouse.get_pos())
-            self.clock.tick()
+                    elif i.button == 3:self.drawing.right_click(pygame.mouse.get_pos())
+            self.clock.tick(60)
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.2f}')
         for i in range(len(self.drawing.shapes)):
             print(self.drawing.shapes[i])

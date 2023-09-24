@@ -61,6 +61,7 @@ class Circle(Shape):
     def __init__(self, x, y, r=0):
         Shape.__init__(self)
         self.center = np.array((x, y))
+        self.file = Video("./videos/abstract_loop.mp4")
         self.radius = r
         self.color = np.array((200,0,0))
     def draw(self, screen):
@@ -68,6 +69,12 @@ class Circle(Shape):
         t = 1
         pygame.draw.circle(screen, np.divide(self.color, 2), self.center, self.radius-t)
         self.color = np.array((200,0,0))
+        if not self.file:
+            return
+        image = self.file.get_image()
+        image = pygame.transform.scale(image, (self.radius, self.radius))
+
+
     def modify(self, mouse_pos):
         self.color = np.array((100,0,0))
         self.radius = np.linalg.norm(self.center - mouse_pos)
