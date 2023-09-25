@@ -117,6 +117,9 @@ class Drawing:
                 self.shapes[self.action_param["index"]].draw(self.app.screen)
             case Action.CHOOSING_SHAPE:
                 pygame.draw.circle(self.app.screen, (100,100,100), self.action_param["mouse_pos"], 40)
+                pygame.draw.circle(self.app.screen, (80,80,80), self.action_param["mouse_pos"] + np.array([20,0]), 10)
+                pygame.draw.rect(self.app.screen, (80,80,80), pygame.Rect(self.action_param["mouse_pos"][0]-30, self.action_param["mouse_pos"][1]-10, 20,20))
+                pygame.draw.rect(self.app.screen, (80,80,80), pygame.Rect(self.action_param["mouse_pos"][0]-1, self.action_param["mouse_pos"][1]-40, 2,80))
     def run(self):
         self.update()
         self.draw()
@@ -140,7 +143,6 @@ class App:
         self.clock = pygame.time.Clock()
         self.drawing = Drawing(self)
         self.running = True
-
     def run(self):
         while self.running:
             self.screen.fill('black')
@@ -152,6 +154,7 @@ class App:
                 elif i.type == pygame.MOUSEBUTTONUP:
                     if i.button == 1:self.drawing.click(pygame.mouse.get_pos())
                     elif i.button == 3:self.drawing.right_click(pygame.mouse.get_pos())
+
             self.clock.tick(60)
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.2f}')
         for i in range(len(self.drawing.shapes)):
