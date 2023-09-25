@@ -4,6 +4,7 @@ import taichi as ti
 from enum import Enum
 from shapes import Rect, Circle
 from audiovisual import Video
+import ui
 # settings;
 res = width, height = 1920, 1080 # with modern video card with CUDA support - increase res '1600, 900' and set 'ti.init(arch=ti.cuda)'
 
@@ -82,12 +83,10 @@ class Drawing:
             case Action.CHOOSING_SHAPE:
                 dir = mouse_pos - self.action_param["mouse_pos"]
                 mp = self.action_param["mouse_pos"]
-                if np.linalg.norm(dir) <= 40:
-                    shape = None
-                    if dir[0]<0:shape=Rect(mp[0], mp[1], mp[0] + dir[0], mp[1] + dir[1])
-                    else : shape = Circle(mp[0], mp[1], np.linalg.norm(dir))
+                shape_selected = ui.select_shape(mp, dir)
+                if shape_selected:
                     self.action = Action.CREATING_SHAPE
-                    self.action_param = {"mouse_pos": mp, "shape": shape}
+                    self.action_param = {"mouse_pos": mp, "shape": shape_selected}
                 else:
                     self.action = Action.NOTHING
                     self.action_param = None
@@ -116,10 +115,7 @@ class Drawing:
             case Action.MOVING_SHAPE:
                 self.shapes[self.action_param["index"]].draw(self.app.screen)
             case Action.CHOOSING_SHAPE:
-                pygame.draw.circle(self.app.screen, (100,100,100), self.action_param["mouse_pos"], 40)
-                pygame.draw.circle(self.app.screen, (80,80,80), self.action_param["mouse_pos"] + np.array([20,0]), 10)
-                pygame.draw.rect(self.app.screen, (80,80,80), pygame.Rect(self.action_param["mouse_pos"][0]-30, self.action_param["mouse_pos"][1]-10, 20,20))
-                pygame.draw.rect(self.app.screen, (80,80,80), pygame.Rect(self.action_param["mouse_pos"][0]-1, self.action_param["mouse_pos"][1]-40, 2,80))
+                ui.draw_shape_tool(self.app.screen, self.action_param["mouse_pos"])
     def run(self):
         self.update()
         self.draw()
