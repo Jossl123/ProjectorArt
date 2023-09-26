@@ -57,8 +57,7 @@ class Drawing:
                 # file_selection = pygame.UIFileDialog(rect=Rect(0, 0, 300, 300), manager=manager, initial_file_path='C:\\')
                 # if event.ui_element == file_selection.ok_button:
                 #     file_path = file_selection.current_file_path
-                if not shape.file:shape.file = Video("./videos/abstract_loop.mp4")
-                else : shape.file = None
+                shape.active_file = not shape.active_file
                 continue
             
     def click(self, mouse_pos):

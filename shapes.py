@@ -5,6 +5,7 @@ from audiovisual import Video
 class Shape:
     def __init__(self):
         self.file = None
+        self.active_file = True
     def draw(self, screen):pass
     def modify(self, mouse_pos):pass
     def point_inside(self, p):pass
@@ -22,7 +23,7 @@ class Rect(Shape, pygame.Rect):
         pygame.Rect.__init__(self, x, y, w, h)
         self.color = np.array([0,200,0])
     def draw(self, screen, pixel_array):
-        if not self.file:
+        if not self.file or not self.active_file :
             self.pixel_array = pixel_array
             self.abstract_art(screen)
             return
@@ -78,7 +79,7 @@ class Circle(Shape):
         t = 1
         pygame.draw.circle(screen, np.divide(self.color, 2), self.center, self.radius-t)
         self.color = np.array((200,0,0))
-        if not self.file:
+        if not self.file or not self.active_file:
             return
         image = self.file.get_image()
         image = pygame.transform.scale(image, (self.radius, self.radius))
