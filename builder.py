@@ -37,7 +37,7 @@ class Drawing:
     @ti.kernel
     def render(self):
         for x, y in self.screen_field: # parallelization loop
-            col = (x+y)%255
+            col = 0
             self.screen_field[x, y] = [col, col, col]
 
     # def control(self):
@@ -92,8 +92,6 @@ class Drawing:
                     self.action_param = None
 
     def update(self):
-        #self.render()
-        #self.screen_array = self.screen_field.to_numpy()
         match self.action:
             case Action.MOVING_SHAPE:
                 mouse_pos = pygame.mouse.get_pos()
@@ -102,20 +100,22 @@ class Drawing:
                 self.action_param["start_pos"] = mouse_pos
 
     def draw(self):
-        #pygame.surfarray.blit_array(self.app.screen, self.screen_array)
+        #self.render()
         for shape in self.shapes:
-            shape.draw(self.app.screen)
-            #pygame.draw.rect(self.app.screen, (0,0,200), shape)
+            shape.draw(self.app.screen, self.screen_field)
+        #self.screen_array = self.screen_field.to_numpy()
+        #pygame.surfarray.blit_array(self.app.screen, self.screen_array)
         match self.action:
             case Action.CREATING_SHAPE:
                 r = self.action_param["shape"].modify(pygame.mouse.get_pos())
-                r.draw(self.app.screen)
+                r.draw(self.app.screen, self.screen_field)
                 #pygame.draw.rect(self.app.screen, (0,200,0), r)
                 #pygame.draw.rect(self.app.screen, (0,100,0), pygame.Rect(r.left+2, r.top+2, r.width -4, r.height - 4))
             case Action.MOVING_SHAPE:
-                self.shapes[self.action_param["index"]].draw(self.app.screen)
+                self.shapes[self.action_param["index"]].draw(self.app.screen, self.screen_array)
             case Action.CHOOSING_SHAPE:
                 ui.draw_shape_tool(self.app.screen, self.action_param["mouse_pos"])
+
     def run(self):
         self.update()
         self.draw()
